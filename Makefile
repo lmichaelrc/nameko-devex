@@ -7,6 +7,9 @@ CF_ORG ?= good
 CF_SPACE ?= morning
 CF_APP ?= nameko-devex
 
+EPINIO_DOMAIN ?= michael-epinio.com
+EPINIO_APP_NAME ?= nameko-devex
+
 install-dependencies:
 	pip install -U -e "orders/.[dev]"
 	pip install -U -e "products/.[dev]"
@@ -135,3 +138,31 @@ undeployCF: cf_target
 	$(MAKE) cf_ds_postgres
 	$(MAKE) cf_ds_rabbitmq
 	$(MAKE) cf_ds_redis
+	
+# Deploy with Epinio.io
+deployEpinio:
+	$(MAKE) epinio-create-namespace
+	$(MAKE) epinio-create-app
+	$(MAKE) epinio-install-services
+	${MAKE} epinio-push-app
+
+epinio-create-namespace:
+	epinio create namespace $(EPINIO_APP_NAME)
+	epinio target $(EPINIO_APP_NAME)
+
+epinio-create-app:
+	epinio create app $(EPINIO_APP_NAME)
+
+epinio-install-services:
+	epinio service create rabbitmq-dev rabbitmq
+	epinio service create postgresql-dev postgresql
+	epinio service create redis-dev redis
+
+	epinio service bind rabbitmq $(EPINIO_APP_NAME)
+	epinio service bind postgresql $(EPINIO_APP_NAME)
+	epinio service bind redis $(EPINIO_APP_NAME)
+
+	sleep 60 
+	
+epinio-push-app:
+	epinio push -n $(EPINIO_APP_NAME)
