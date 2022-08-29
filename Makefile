@@ -166,3 +166,6 @@ epinio-install-services:
 	
 epinio-push-app:
 	epinio push -n $(EPINIO_APP_NAME)
+	
+undeployEpinio:
+	epinio namespace delete $(EPINIO_APP_NAME)
